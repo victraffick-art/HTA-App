@@ -1,0 +1,8 @@
+{
+  "name": "HTA Infinity Flow App",
+  "description": "A comprehensive orthomolecular health platform for managing and reversing hypertension through data-driven nutrition, habit tracking, and medical triage.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
