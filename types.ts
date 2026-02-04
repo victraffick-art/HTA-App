@@ -71,6 +71,26 @@ export interface DailyInsight {
   status: 'optimal' | 'warning' | 'critical';
   message: string;
   recommendations: string[];
-  adherenceScore?: number; // Medication Adherence Score (MAS)
+  adherenceScore?: number; 
   probabilityLevel?: 'Baja' | 'Media' | 'Alta';
+}
+
+export interface MealPlanItem {
+  time: string;
+  title: string;
+  description: string;
+  quantities: string;
+  nutrients: string[];
+  cellularBenefit: string;
+  type: 'breakfast' | 'lunch' | 'snack' | 'dinner';
+  imageSearchTerm: string;
+}
+
+export interface DailyNutritionPlan {
+  date: string;
+  sodiumLimit: string;
+  potassiumTarget: string;
+  magnesiumTarget: string;
+  meals: MealPlanItem[];
+  overallAdvice: string;
 }

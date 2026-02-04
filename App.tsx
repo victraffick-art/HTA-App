@@ -84,7 +84,7 @@ const App: React.FC = () => {
         <Route path="/medical-history" element={<AppLayout hideNav><MedicalHistoryPage profile={profile} setProfile={setProfile} /></AppLayout>} />
         <Route path="/onboarding" element={<AppLayout hideNav><OnboardingPage profile={profile} setProfile={setProfile} /></AppLayout>} />
         <Route path="/log" element={<AppLayout><DashboardPage profile={profile} logs={logs} setLogs={setLogs} lastInsight={lastInsight} setLastInsight={setLastInsight} /></AppLayout>} />
-        <Route path="/nutrition" element={<AppLayout><NutritionPage profile={profile} /></AppLayout>} />
+        <Route path="/nutrition" element={<AppLayout><NutritionPage profile={profile} logs={logs} /></AppLayout>} />
         <Route path="/community" element={<AppLayout><CommunityPage /></AppLayout>} />
         <Route path="/triage" element={<AppLayout><TriagePage /></AppLayout>} />
       </Routes>
