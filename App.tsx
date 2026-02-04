@@ -55,6 +55,7 @@ const App: React.FC = () => {
     age: 0,
     weight: 0,
     height: 0,
+    totalPoints: 0, // Inicialización de puntos
     medicalHistory: {
       chronicConditions: [],
       currentMedications: [],
@@ -84,8 +85,8 @@ const App: React.FC = () => {
         <Route path="/medical-history" element={<AppLayout hideNav><MedicalHistoryPage profile={profile} setProfile={setProfile} /></AppLayout>} />
         <Route path="/onboarding" element={<AppLayout hideNav><OnboardingPage profile={profile} setProfile={setProfile} /></AppLayout>} />
         <Route path="/log" element={<AppLayout><DashboardPage profile={profile} logs={logs} setLogs={setLogs} lastInsight={lastInsight} setLastInsight={setLastInsight} /></AppLayout>} />
-        <Route path="/nutrition" element={<AppLayout><NutritionPage profile={profile} logs={logs} /></AppLayout>} />
-        <Route path="/community" element={<AppLayout><CommunityPage /></AppLayout>} />
+        <Route path="/nutrition" element={<AppLayout><NutritionPage profile={profile} setProfile={setProfile} logs={logs} /></AppLayout>} />
+        <Route path="/community" element={<AppLayout><CommunityPage profile={profile} /></AppLayout>} />
         <Route path="/triage" element={<AppLayout><TriagePage /></AppLayout>} />
       </Routes>
     </Router>

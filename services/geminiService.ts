@@ -3,37 +3,46 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MedicalHistory, VitalLog, DailyNutritionPlan } from "../types";
 
 const cleanJsonString = (str: string) => {
-  return str.replace(/```json|```/gi, '').trim();
+  // Elimina bloques de código markdown y espacios en blanco
+  let cleaned = str.replace(/```json|```/gi, '').trim();
+  // Intenta encontrar el primer '{' y el último '}' para extraer solo el objeto JSON
+  const firstBracket = cleaned.indexOf('{');
+  const lastBracket = cleaned.lastIndexOf('}');
+  if (firstBracket !== -1 && lastBracket !== -1) {
+    cleaned = cleaned.substring(firstBracket, lastBracket + 1);
+  }
+  return cleaned;
 };
 
 export const analyzeFoodImage = async (base64Image: string, profile: any, lastLog: VitalLog | undefined) => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `Actúa como el motor de análisis de salud y visión de "Infinity-Flow".
-  MISIÓN: Analizar la foto del plato del usuario, verificar cumplimiento DASH/Ortomolecular y gamificar la experiencia.
+  MISIÓN: Analizar la foto del plato del usuario y realizar un Desglose Nutricional Celular.
   
   DATOS DEL PACIENTE:
   - Edad: ${profile.age}, Peso: ${profile.weight}kg.
   - Última Presión: ${lastLog ? `${lastLog.systolic}/${lastLog.diastolic} mmHg` : 'Desconocida'}.
   
   PROTOCOLO DE ANÁLISIS:
-  1. Identifica alimentos y estima Sodio/Potasio.
+  1. Identifica alimentos y estima Sodio (mg) y Potasio (mg).
   2. Asigna puntos: 10 (Excelente DASH), 5 (Aceptable), 0 (Procesados/Peligrosos).
   3. Genera un mensaje motivador para la comunidad.
-  4. Si el plato no es apto, sugiere reemplazo inmediato.
-  5. Ajusta la recomendación de gramajes para el siguiente tiempo de comida basado en lo detectado.
+  4. Explica el impacto celular y sugiere ajustes de gramajes para la siguiente comida.
 
-  RESPONDE EXCLUSIVAMENTE EN JSON:
+  REGLA ESTRICTA DE SALIDA: Responde EXCLUSIVAMENTE con un objeto JSON válido con esta estructura exacta:
   {
-    "score": number,
-    "identifiedFoods": string[],
-    "feedback": "Mensaje del Coach Médico",
-    "communityMessage": "¡Usuario X ha cumplido su meta DASH! 🚀",
-    "nutritionalImpact": { "sodium": "Xmg", "potassium": "Ymg" },
-    "nextStepAdjustment": "Recomendación ajustada de gramajes y nutrientes para la siguiente comida",
+    "sodio_mg": number,
+    "potasio_mg": number,
+    "puntos": number,
+    "mensaje_comunidad": "string",
+    "identifiedFoods": ["string"],
+    "feedback": "string",
+    "nextStepAdjustment": "string",
     "isApt": boolean
   }`;
 
+  // NOTA: Para gemini-2.5-flash-image NO se debe usar responseMimeType ni responseSchema
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: {
@@ -41,11 +50,17 @@ export const analyzeFoodImage = async (base64Image: string, profile: any, lastLo
         { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
         { text: prompt }
       ]
-    },
-    config: { responseMimeType: "application/json" }
+    }
   });
 
-  return JSON.parse(cleanJsonString(response.text || "{}"));
+  const rawText = response.text || "{}";
+  try {
+    const cleanedJson = cleanJsonString(rawText);
+    return JSON.parse(cleanedJson);
+  } catch (e) {
+    console.error("Error al parsear JSON de Gemini:", e, rawText);
+    throw new Error("No se pudo procesar la respuesta nutricional.");
+  }
 };
 
 export const getNutritionAdvice = async (mealTitle: string, history: MedicalHistory) => {
@@ -61,19 +76,18 @@ export const getDetailedNutritionPlan = async (profile: any, lastLog: VitalLog |
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `Actúa como un experto en Nutrición Ortomolecular y Cardiología Clínica. 
-  Genera un PLAN NUTRICIONAL DIARIO basado estrictamente en la DIETA DASH y los principios de salud de ELLEN WHITE (énfasis en plantas, cereales integrales, legumbres, frutas y frutos secos, con temperancia extrema en sal y azúcares).
+  Genera un PLAN NUTRICIONAL DIARIO basado estrictamente en la DIETA DASH y los principios de salud de ELLEN WHITE.
   
   PERFIL DEL PACIENTE:
-  - Edad: ${profile.age} años, Peso: ${profile.weight}kg, Altura: ${profile.height}cm.
+  - Edad: ${profile.age} años, Peso: ${profile.weight}kg.
   - Condiciones: ${profile.medicalHistory.chronicConditions.join(', ')}
   - Última lectura de presión: ${lastLog ? `${lastLog.systolic}/${lastLog.diastolic} mmHg` : 'No disponible'}
   
   REQUERIMIENTOS DEL PLAN:
   1. Define límites de Sodio, Potasio y Magnesio para hoy.
   2. Proporciona 4 comidas: Desayuno, Almuerzo, Merienda/Snack y Cena.
-  3. Para cada comida incluye: Cantidades exactas (ej: 1/2 taza), Nutrientes clave aportados y el Beneficio Celular específico.
   
-  DEVUELVE EXCLUSIVAMENTE UN JSON con esta estructura:
+  DEVUELVE EXCLUSIVAMENTE UN JSON:
   {
     "date": "2025-05-20",
     "sodiumLimit": "1.2g",
@@ -86,12 +100,12 @@ export const getDetailedNutritionPlan = async (profile: any, lastLog: VitalLog |
         "description": "Breve descripción",
         "quantities": "Cantidades detalladas",
         "nutrients": ["Sodio: Xmg", "Potasio: Ymg", "Magnesio: Zmg", "Fibra: Wg"],
-        "cellularBenefit": "Explicación breve del impacto en el endotelio o mitocondria",
+        "cellularBenefit": "Explicación breve del impacto celular",
         "type": "breakfast",
         "imageSearchTerm": "termino para buscar imagen"
       }
     ],
-    "overallAdvice": "Consejo general del día basado en medicina ortomolecular"
+    "overallAdvice": "Consejo general"
   }`;
 
   const response = await ai.models.generateContent({
@@ -119,23 +133,16 @@ export const getHealthInsight = async (
   let contextStr = `
     DATOS CLÍNICOS DEL PACIENTE: 
     - Historial Médico: ${history.chronicConditions.join(', ')}
-    - Alergias: ${history.allergies || 'Ninguna'}
     - Score de Adherencia Terapéutica (MAS): ${masScore}%
   `;
 
   if (logContext) {
-    const activeConsumptions = Object.entries(logContext.consumptions)
-      .filter(([_, value]) => value)
-      .map(([key]) => key)
-      .join(', ');
-
     contextStr += `
     CONTEXTO DE LA MEDICIÓN ACTUAL:
     - Momento del día: ${logContext.momentOfDay}
     - Estado físico: ${logContext.physicalState}
-    - Síntomas de alarma reportados: ${logContext.symptoms.filter(s => s !== 'none').join(', ') || 'Ninguno'}
-    - Consumos en últimas 6h: ${activeConsumptions || 'Ninguno relevante'}
-    - Medicación hoy: ${logContext.medication.takenToday ? 'SÍ (Todo en orden)' : 'NO / OLVIDO (Riesgo Adherencia)'}
+    - Síntomas: ${logContext.symptoms.filter(s => s !== 'none').join(', ') || 'Ninguno'}
+    - Meds hoy: ${logContext.medication.takenToday ? 'SÍ' : 'NO'}
     `;
   }
 
@@ -144,16 +151,7 @@ export const getHealthInsight = async (
     contents: `Actúa como un cardiólogo experto. Analiza estos signos vitales: Sístole ${systolic} mmHg, Diástole ${diastolic} mmHg, Pulso ${pulse} lpm.
     ${contextStr}
     
-    REGLA DE ORO: Clasifica según la GUÍA AHA/ACC 2025 de Hipertensión Arterial.
-    Proporciona un JSON con esta estructura:
-    {
-      "status": "optimal" | "warning" | "critical",
-      "message": "Análisis clínico detallado bajo AHA/ACC 2025",
-      "probabilityLevel": "Baja" | "Media" | "Alta",
-      "recommendations": ["Lista de acciones concretas"],
-      "cellularNutrition": "Recomendación ortomolecular/celular para restaurar balance",
-      "triggerUrgentConsult": boolean
-    }`,
+    Proporciona un JSON con status, message, probabilityLevel, recommendations, cellularNutrition y triggerUrgentConsult.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {

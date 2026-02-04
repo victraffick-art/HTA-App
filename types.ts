@@ -59,6 +59,7 @@ export interface UserProfile {
   age: number;
   weight: number;
   height: number;
+  totalPoints: number; // Puntos acumulativos
   medicalHistory: MedicalHistory;
   subscription: {
     plan: 'Free Trial' | 'Premium';
@@ -76,6 +77,7 @@ export interface DailyInsight {
 }
 
 export interface MealPlanItem {
+  id: string; // Identificador único para cada plato
   time: string;
   title: string;
   description: string;
@@ -84,6 +86,7 @@ export interface MealPlanItem {
   cellularBenefit: string;
   type: 'breakfast' | 'lunch' | 'snack' | 'dinner';
   imageSearchTerm: string;
+  isCompleted?: boolean; // Estado de verificación por foto
 }
 
 export interface DailyNutritionPlan {

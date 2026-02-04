@@ -1,7 +1,12 @@
 
 import React from 'react';
+import { UserProfile } from '../types';
 
-const CommunityPage: React.FC = () => {
+interface Props {
+  profile: UserProfile;
+}
+
+const CommunityPage: React.FC<Props> = ({ profile }) => {
   return (
     <div className="pb-24">
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
@@ -24,9 +29,16 @@ const CommunityPage: React.FC = () => {
           <h2 className="text-xl font-bold mb-4">Muro de Logros</h2>
           <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
             <AchievementCard 
+              title="Mi Puntuación Vital" 
+              user={`${profile.name} (Tú)`} 
+              color="from-[#13ec5b] to-leaf-green" 
+              icon="verified"
+              points={profile.totalPoints} 
+            />
+            <AchievementCard 
               title="Reducción de dosis lograda" 
               user="Usuario #482" 
-              color="from-primary to-leaf-green" 
+              color="from-primary/80 to-leaf-green" 
               icon="pill_off" 
             />
             <AchievementCard 
@@ -34,12 +46,6 @@ const CommunityPage: React.FC = () => {
               user="Usuario #129" 
               color="from-blue-400 to-blue-600" 
               icon="vital_signs" 
-            />
-             <AchievementCard 
-              title="Nuevo récord de hidratación" 
-              user="Usuario #99" 
-              color="from-orange-400 to-red-500" 
-              icon="water_drop" 
             />
           </div>
         </div>
@@ -83,10 +89,15 @@ const CommunityPage: React.FC = () => {
   );
 };
 
-const AchievementCard: React.FC<{ title: string; user: string; color: string; icon: string }> = ({ title, user, color, icon }) => (
+const AchievementCard: React.FC<{ title: string; user: string; color: string; icon: string; points?: number }> = ({ title, user, color, icon, points }) => (
   <div className="min-w-[260px] bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm group hover:border-primary/50 transition-colors">
-    <div className={`h-32 bg-gradient-to-br ${color} rounded-lg flex items-center justify-center shadow-inner`}>
+    <div className={`h-32 bg-gradient-to-br ${color} rounded-lg flex flex-col items-center justify-center shadow-inner relative overflow-hidden`}>
       <span className="material-symbols-outlined text-white text-5xl opacity-90 group-hover:scale-110 transition-transform">{icon}</span>
+      {points !== undefined && (
+        <div className="absolute bottom-2 right-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
+          <p className="text-[10px] font-black text-white">{points} pts</p>
+        </div>
+      )}
     </div>
     <p className="font-bold mt-2 text-sm">{title}</p>
     <p className="text-xs text-gray-500">{user}</p>
