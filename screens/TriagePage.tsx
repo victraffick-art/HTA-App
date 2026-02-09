@@ -1,12 +1,20 @@
 
 import React from 'react';
+import { AppNotification } from '../types';
 
-const TriagePage: React.FC = () => {
+interface Props {
+  onOpenNotifications: () => void;
+  notifications: AppNotification[];
+}
+
+const TriagePage: React.FC<Props> = ({ onOpenNotifications, notifications }) => {
   const alerts = [
     { id: 1, name: 'Carlos J. Ramírez', vital: '165/105', status: 'CRISIS HTA', type: 'urgent' },
     { id: 2, name: 'Elena Martínez', vital: '142/91', status: 'RIESGO ELEVADO', type: 'warning' },
     { id: 3, name: 'Juan P. Soto', vital: '118/79', status: 'ESTABLE', type: 'stable' }
   ];
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="pb-24">
@@ -18,7 +26,17 @@ const TriagePage: React.FC = () => {
           <h2 className="text-sm font-bold">Panel de Consultas</h2>
           <p className="text-[10px] text-gray-500">Dr. Alejandro Méndez</p>
         </div>
-        <span className="material-symbols-outlined text-gray-500">notifications</span>
+        <button 
+          onClick={onOpenNotifications}
+          className="size-10 flex items-center justify-center relative hover:text-primary transition-colors text-gray-500"
+        >
+          <span className="material-symbols-outlined">notifications</span>
+          {unreadCount > 0 && (
+            <div className="absolute top-1 right-1 size-4 bg-urgent text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+              {unreadCount}
+            </div>
+          )}
+        </button>
       </header>
 
       <div className="flex gap-3 p-4 overflow-x-auto hide-scrollbar bg-background-light dark:bg-background-dark/50">

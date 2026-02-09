@@ -1,12 +1,16 @@
 
 import React from 'react';
-import { UserProfile } from '../types';
+import { UserProfile, AppNotification } from '../types';
 
 interface Props {
   profile: UserProfile;
+  onOpenNotifications: () => void;
+  notifications: AppNotification[];
 }
 
-const CommunityPage: React.FC<Props> = ({ profile }) => {
+const CommunityPage: React.FC<Props> = ({ profile, onOpenNotifications, notifications }) => {
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
     <div className="pb-24">
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
@@ -15,7 +19,17 @@ const CommunityPage: React.FC<Props> = ({ profile }) => {
             <img src="https://picsum.photos/seed/community-profile/100/100" alt="Circle" />
           </div>
           <h2 className="text-[#111813] dark:text-white font-bold tracking-tight">Infinity-Circles</h2>
-          <span className="material-symbols-outlined text-gray-500">notifications</span>
+          <button 
+            onClick={onOpenNotifications}
+            className="size-10 flex items-center justify-center relative hover:text-primary transition-colors text-gray-500"
+          >
+            <span className="material-symbols-outlined">notifications</span>
+            {unreadCount > 0 && (
+              <div className="absolute top-1 right-1 size-4 bg-urgent text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+                {unreadCount}
+              </div>
+            )}
+          </button>
         </div>
       </div>
       
